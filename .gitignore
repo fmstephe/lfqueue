@@ -1,0 +1,10 @@
+*.6
+/_obj
+*.swp
+_*
+*.out
+*.log
+*.profile
+loadtest/loadtest
+locsrv/locsrv
+profile/profile
