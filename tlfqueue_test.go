@@ -39,8 +39,8 @@ func TestEnqEnqDeqDeq(t *testing.T) {
 	}
 }
 
-func TestRand(t *testing.T) {
-	input := make([]int, 100, 100)
+func testRand(t *testing.T) {
+	input := make([]int, 1000, 1000)
 	for i := range input {
 		input[i] = rand.Int()
 	}
@@ -55,4 +55,50 @@ func TestRand(t *testing.T) {
 		}
 		q.enq(input[i])
 	}
+}
+
+func TestConc(t *testing.T) {
+	inputs := 1000000
+	grts := 8
+	input := make([]int, inputs)
+	termChans := make([]chan bool, grts)
+	for i := range termChans {
+		termChans[i] = make(chan bool)
+	}
+	for i := range input {
+		input[i] = rand.Int()
+	}
+	q := New()
+	for i := range termChans {
+		go enqAndTerminate(q, input, termChans[i])
+	}
+	for i := range termChans {
+		<-termChans[i]
+	}
+	results := make(map[int]int)
+	for {
+		if val, ok := q.deq(); ok {
+			intVal := val.(int)
+			if count, ok := results[intVal]; ok {
+				results[intVal] = count + 1
+			} else {
+				results[intVal] = 1
+			}
+		} else {
+			break
+		}
+	}
+	for i := range input {
+		val := input[i]
+		if results[val] % grts != 0 {
+			t.Error("Failed")
+		}
+	}
+}
+
+func enqAndTerminate(q *Q, input []int, termChan chan bool) {
+	for _, v := range input {
+		q.enq(v)
+	}
+	termChan<-true
 }

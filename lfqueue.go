@@ -1,64 +1,58 @@
 package lfqueue
 
 import (
-	"unsafe"
 	"sync/atomic"
+	"unsafe"
 )
 
 type node struct {
 	val interface{}
-	nxt *node
+	nxt unsafe.Pointer
 }
 
 type Q struct {
-	head *node
-	tail *node
+	head unsafe.Pointer
+	tail unsafe.Pointer
 }
 
 func New() (q *Q) {
 	q = new(Q)
-	n := new(node)
+	n := unsafe.Pointer(new(node))
 	q.head = n
 	q.tail = n
 	return
 }
 
 func (q *Q) enq(val interface{}) {
-	var t, n *node
-	n = &node{val: val, nxt: nil}
+	var t, n unsafe.Pointer
+	n = unsafe.Pointer(&node{val: val, nxt: nil})
 	for {
 		t = q.tail
-		if t.nxt != nil {
-			tp := unsafe.Pointer(q.tail)
-			atomic.CompareAndSwapPointer(&tp, unsafe.Pointer(t), unsafe.Pointer(t.nxt))
-			continue
-		}
-		tp := unsafe.Pointer(q.tail)
-		if atomic.CompareAndSwapPointer(&tp, nil, unsafe.Pointer(n)) {
+		nxt := ((*node)(t)).nxt
+		if nxt != nil {
+			atomic.CompareAndSwapPointer(&q.tail, t, nxt)
+		} else if atomic.CompareAndSwapPointer(&((*node)(t)).nxt, nil, n) {
 			break
 		}
 	}
-	tp := unsafe.Pointer(q.tail)
-	atomic.CompareAndSwapPointer(&tp, unsafe.Pointer(t), unsafe.Pointer(n))
+	atomic.CompareAndSwapPointer(&q.tail, t, n)
 }
 
 func (q *Q) deq() (val interface{}, success bool) {
-	var h, t, n *node
+	var h, t, n unsafe.Pointer
 	for {
 		h = q.head
 		t = q.tail
-		n = h.nxt
+		n = ((*node)(h)).nxt
 		if h == t {
 			if n == nil {
 				return nil, false
 			} else {
-				tp := unsafe.Pointer(q.tail)
-				atomic.CompareAndSwapPointer(&tp, unsafe.Pointer(t), unsafe.Pointer(n))
+				atomic.CompareAndSwapPointer(&q.tail, t, n)
 			}
 		} else {
-			val = n.val
-			tp := unsafe.Pointer(q.head)
-			if atomic.CompareAndSwapPointer(&tp, unsafe.Pointer(h), unsafe.Pointer(n)) {
+			val = ((*node)(n)).val // Only visible on x86?
+			if atomic.CompareAndSwapPointer(&q.head, h, n) {
 				return val, true
 			}
 		}
