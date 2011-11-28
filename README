@@ -1,0 +1,5 @@
+This is a lock-free concurrent queue implementation for Go. It is not intended to be used on anything other X86 because of its conservative memory model.
+
+The implementation is based on the Michael-Scott algorithm described in the paper "Simple, Fast, and Practical Non-Blocking and Blocking Concurrent Queue Algorithms"
+
+To see another real implementation of this have a look at java.util.concurrent.ConcurrentLinkedQueue.java
