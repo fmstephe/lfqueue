@@ -51,7 +51,7 @@ func (q *Q) deq() (val interface{}, success bool) {
 				atomic.CompareAndSwapPointer(&q.tail, t, n)
 			}
 		} else {
-			val = ((*node)(n)).val // Only visible on x86?
+			val = ((*node)(n)).val // Enq(...) write to val may not be visible
 			if atomic.CompareAndSwapPointer(&q.head, h, n) {
 				return val, true
 			}
