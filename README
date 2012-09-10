@@ -1,3 +1,5 @@
+Please note that this code is _incomplete_. It does not work as it stands right now.
+
 This is a lock-free concurrent queue implementation for Go. It does not provide safe dequeing and needs either a Java-style volatile read or some other synchronisation mechanism.
 
 The implementation is based on the Michael-Scott algorithm described in the paper "Simple, Fast, and Practical Non-Blocking and Blocking Concurrent Queue Algorithms"
